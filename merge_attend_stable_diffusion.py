@@ -72,7 +72,7 @@ class MergeAttendStableDiffusion(nn.Module):
 
             for sub_name, child in module.named_children():
                 fn_recursive_attn_processor(f"{name}.{sub_name}", child, processor)
-
+        
         if 'down_blocks' in block_name:
             for name, module in self.unet.down_blocks.named_children():
                 fn_recursive_attn_processor(name, module, processor)
@@ -136,7 +136,6 @@ class MergeAttendStableDiffusion(nn.Module):
 
         b, l, d = text_embeds.size()
         text_embeds = text_embeds[:, None].repeat(1, len(views), 1, 1).reshape(b * len(views), l, d)
-
         with torch.autocast('cuda'):
             for i, t in enumerate(tqdm(self.scheduler.timesteps)):
                 if i >= mad_threshold:

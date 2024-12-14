@@ -118,20 +118,16 @@ class CrossViewsAttnProcessor2_0:
             key = rearrange(key, 'b p (nh nd) -> b nh p nd', nh=attn.heads, nd=head_dim)
             value = torch.cat([value[None, 0], value[None, -1]], dim=0) if not self.is_cons else value[None, 0]
             value = rearrange(value, 'b p (nh nd) -> b nh p nd', nh=attn.heads, nd=head_dim)
-
         # the output of sdp = (batch, num_heads, seq_len, head_dim)
         hidden_states = F.scaled_dot_product_attention(
             query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False, scale=attn.scale
         )
-
         if not is_cross_attention and not self.apply_mad:
             hidden_states = rearrange(hidden_states, 'b nh hw nd -> b hw (nh nd)')
         else:
-            hidden_states = hidden_states.transpose(1, 2)
             latent_h = self.latent_h // down_factor
-            hidden_states = rearrange(hidden_states, 'b (h w) nh hd -> b 1 h w (nh hd)', h=latent_h)
+            hidden_states = rearrange(hidden_states, 'b nh (h w)  hd -> b 1 h w (nh hd)', h=latent_h)
             hidden_states = self.split_canvas_into_views(hidden_states, down_factor)
-
         hidden_states = hidden_states.to(query.dtype)
         # linear proj
         hidden_states = attn.to_out[0](hidden_states)

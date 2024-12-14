@@ -53,6 +53,7 @@ def main():
                 mad_blocks=args.mad_blocks,
                 mad_threshold=args.mad_threshold
             )
+            print(img.size)
             img.save(save_path)
             torch.cuda.empty_cache()
 
